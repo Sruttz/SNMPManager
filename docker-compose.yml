@@ -1,0 +1,48 @@
+version: '3.8'
+
+services:
+  web-client:
+    build:
+      context: ./web-client
+      dockerfile: Dockerfile
+    ports:
+      - "3000:80"
+    environment:
+      - REACT_APP_API_URL=http://localhost:5000/api
+    depends_on:
+      - web-server
+    networks:
+      - snmp-network
+
+  web-server:
+    build:
+      context: ./web-server
+      dockerfile: Dockerfile
+    ports:
+      - "5000:5000"
+    environment:
+      - PORT=5000
+      - NODE_ENV=production
+      - SNMP_TIMEOUT=5000
+    depends_on:
+      - snmp-agent
+    networks:
+      - snmp-network
+
+  snmp-agent:
+    build:
+      context: ./snmp-agent
+      dockerfile: Dockerfile
+    ports:
+      - "161:161/udp"
+      - "162:162/udp"
+    environment:
+      - AGENT_PORT=161
+      - COMMUNITY_READ=public
+      - COMMUNITY_WRITE=private
+    networks:
+      - snmp-network
+
+networks:
+  snmp-network:
+    driver: bridge

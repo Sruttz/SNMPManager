@@ -1,0 +1,71 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: snmp-agent
+  namespace: snmp-system
+  labels:
+    app: snmp-agent
+    tier: backend
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: snmp-agent
+  template:
+    metadata:
+      labels:
+        app: snmp-agent
+        tier: backend
+    spec:
+      containers:
+      - name: snmp-agent
+        image: yourdockerhubusername/snmp-agent:latest
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 161
+          protocol: UDP
+          name: snmp
+        - containerPort: 162
+          protocol: UDP
+          name: snmp-trap
+        env:
+        - name: AGENT_PORT
+          value: "161"
+        - name: TRAP_PORT
+          value: "162"
+        - name: COMMUNITY_READ
+          value: "public"
+        - name: COMMUNITY_WRITE
+          value: "private"
+        - name: TRAP_MANAGER_HOST
+          value: "web-server"
+        - name: TRAP_MANAGER_PORT
+          value: "162"
+        resources:
+          requests:
+            memory: "128Mi"
+            cpu: "100m"
+          limits:
+            memory: "256Mi"
+            cpu: "200m"
+
+---
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: snmp-agent-hpa
+  namespace: snmp-system
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: snmp-agent
+  minReplicas: 2
+  maxReplicas: 5
+  metrics:
+  - type: Resource
+    resource:
+      name: cpu
+      target:
+        type: Utilization
+        averageUtilization: 70

@@ -1,0 +1,56 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: web-client
+  namespace: snmp-system
+  labels:
+    app: web-client
+spec:
+  type: LoadBalancer
+  ports:
+  - port: 80
+    targetPort: 80
+    protocol: TCP
+    name: http
+  selector:
+    app: web-client
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: web-server
+  namespace: snmp-system
+  labels:
+    app: web-server
+spec:
+  type: ClusterIP
+  ports:
+  - port: 5000
+    targetPort: 5000
+    protocol: TCP
+    name: http
+  selector:
+    app: web-server
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: snmp-agent
+  namespace: snmp-system
+  labels:
+    app: snmp-agent
+spec:
+  type: ClusterIP
+  ports:
+  - port: 161
+    targetPort: 161
+    protocol: UDP
+    name: snmp
+  - port: 162
+    targetPort: 162
+    protocol: UDP
+    name: snmp-trap
+  selector:
+    app: snmp-agent
